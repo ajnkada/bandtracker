@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>BandTracker Pro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root {
+  --bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--surface3:#1e242c;
+  --border:#2a3140;--accent:#f59e0b;--accent2:#3b82f6;--accent3:#10b981;
+  --danger:#ef4444;--text:#e8eaf0;--text2:#8892a4;--text3:#4a5568;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent)}
+.logo span{color:var(--text2);font-weight:300}
+.header-badge{font-size:.65rem;background:var(--accent);color:#000;padding:2px 7px;border-radius:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:12px 14px;font-size:.78rem;font-weight:700;color:var(--text2);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;text-transform:uppercase;font-family:'Rajdhani',sans-serif;letter-spacing:.5px;transition:color .2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* CONTENT */
+.content{padding:16px;max-width:720px;margin:0 auto}
+.section{display:none}.section.active{display:block}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;margin-bottom:12px}
+.card-title{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:12px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;flex-shrink:0}
+
+/* PHOTO SLOTS */
+.photo-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.photo-slot{background:var(--surface3);border:2px dashed var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:border-color .2s}
+.photo-slot.has-photo{border-color:var(--accent3);border-style:solid}
+.photo-slot-icon{font-size:1.4rem}
+.photo-slot-label{font-size:.68rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.4px;line-height:1.3}
+.photo-slot-preview{width:100%;max-height:65px;object-fit:cover;border-radius:4px;display:none}
+.photo-slot-btns{display:flex;gap:5px;width:100%}
+.psbtn{flex:1;padding:6px 4px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;text-align:center;position:relative;overflow:hidden}
+.psbtn input[type=file]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.psbtn:hover{border-color:var(--accent);color:var(--accent)}
+.photo-count{font-size:.72rem;color:var(--text2);font-family:'JetBrains Mono',monospace;text-align:center;padding:4px 0}
+.photo-count b{color:var(--accent)}
+
+/* EAN BAR */
+.ean-bar{display:none;align-items:center;gap:8px;background:var(--surface2);border:1px solid rgba(59,130,246,.35);border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px}
+.ean-bar.show{display:flex}
+.ean-bar-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--accent2);flex:1}
+.ean-bar-btn{background:var(--accent2);color:#fff;border:none;border-radius:var(--radius-sm);padding:7px 11px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;text-transform:uppercase;white-space:nowrap}
+
+/* SCAN STATUS */
+.scan-bar{display:none;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin:8px 0}
+.scan-bar.active{display:block}
+.scan-bar::after{content:'';display:block;width:30%;height:100%;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:sweep 1.2s linear infinite}
+@keyframes sweep{from{margin-left:-30%}to{margin-left:130%}}
+.scan-status{font-size:.78rem;color:var(--accent);font-family:'JetBrains Mono',monospace;min-height:20px;text-align:center;margin:4px 0}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--radius-sm);font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.5px;cursor:pointer;border:none;transition:all .15s;text-transform:uppercase;width:100%}
+.btn-primary{background:var(--accent);color:#000;font-size:1rem}
+.btn-primary:disabled{background:var(--border);color:var(--text3);cursor:not-allowed}
+.btn-secondary{background:var(--surface3);color:var(--text);border:1px solid var(--border)}
+.btn-success{background:var(--accent3);color:#000}
+.btn-blue{background:var(--accent2);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:7px 12px;font-size:.76rem;width:auto}
+.btn-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.form-grid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0;overflow:hidden}
+.field label{font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);font-family:'JetBrains Mono',monospace}
+.field input,.field select,.field textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:9px 10px;font-size:.88rem;font-family:'Rajdhani',sans-serif;transition:border-color .15s;-webkit-appearance:none;appearance:none;width:100%;min-width:0;box-sizing:border-box}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field input.ai-ok{border-color:var(--accent3);background:rgba(16,185,129,.06)}
+.field select option{background:var(--surface2)}
+.field textarea{resize:vertical;min-height:56px}
+
+/* AANTAL BANDEN */
+.qty-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.qty-label{font-size:.75rem;color:var(--text2);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.qty-btns{display:flex;gap:5px}
+.qty-btn{width:40px;height:36px;border:2px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-size:.85rem;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s;-webkit-appearance:none;touch-action:manipulation}
+.qty-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.qty-custom{width:56px;height:36px;background:var(--surface2);border:2px solid var(--accent);border-radius:6px;color:var(--text);font-size:.9rem;font-family:'JetBrains Mono',monospace;text-align:center;-webkit-appearance:none;appearance:none;padding:0 4px}
+.qty-info{font-size:.78rem;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-bottom:10px;min-height:18px}
+
+/* LOC PICKER */
+.loc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.loc-info-btn{background:var(--surface3);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.loc-info-box{display:none;background:var(--surface2);border:1px solid rgba(245,158,11,.25);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;font-size:.82rem;color:var(--text2);line-height:1.7}
+.loc-info-box.show{display:block}
+.loc-info-box strong{color:var(--accent)}
+.loc-stelling{margin-bottom:14px;background:#111418;border:1px solid #2a3140;border-radius:8px;padding:10px}
+.loc-stelling-hdr{display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:#f59e0b;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;flex-wrap:wrap;gap:4px}
+.loc-stelling-tip{font-size:.75rem;font-weight:600;text-transform:none;letter-spacing:0;font-family:'Rajdhani',sans-serif}
+.loc-laag{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.loc-laag-lbl{font-size:.72rem;color:#4a5568;font-family:'JetBrains Mono',monospace;width:24px;flex-shrink:0;font-weight:700}
+.loc-laag-dot{cursor:help;margin-left:1px}
+.loc-laag-hint{font-size:.62rem;color:var(--text3);font-family:'Rajdhani',sans-serif;flex-shrink:0;max-width:80px;text-align:right;line-height:1.2;display:none}
+@media(min-width:420px){.loc-laag-hint{display:block}}
+.loc-vakken{display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex:1}
+.loc-vakken::-webkit-scrollbar{height:3px}
+.loc-vakken::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.loc-cell{
+  flex-shrink:0;
+  width:48px;
+  height:42px;
+  border:2px solid #2a3140;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.8rem;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .15s;
+  background:#181c22;
+  color:#8892a4;
+  -webkit-tap-highlight-color:rgba(245,158,11,0.3);
+  user-select:none;
+  -webkit-user-select:none;
+  padding:0;
+  -webkit-appearance:none;
+  appearance:none;
+  touch-action:manipulation;
+}
+.loc-cell:active{transform:scale(.93);background:#f59e0b;color:#000;border-color:#f59e0b}
+.loc-cell.sel{background:#f59e0b !important;color:#000 !important;border-color:#f59e0b !important}
+.loc-cell.occ{background:rgba(239,68,68,.2) !important;border-color:#ef4444 !important;color:#ef4444 !important;cursor:not-allowed}
+.loc-cell.res{background:rgba(59,130,246,.2) !important;border-color:#3b82f6 !important;color:#3b82f6 !important;cursor:not-allowed}
+.loc-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+.loc-legend span{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:5px}
+.loc-legend i{width:11px;height:11px;border-radius:2px;display:inline-block}
+
+/* INVENTORY */
+.search-bar input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:.9rem;font-family:'Rajdhani',sans-serif;margin-bottom:10px}
+.search-bar input:focus{outline:none;border-color:var(--accent)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fbtn{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;text-transform:uppercase;transition:all .15s}
+.fbtn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.stat-val{font-size:1.8rem;font-weight:700;color:var(--accent);font-family:'JetBrains Mono',monospace}
+.stat-lbl{font-size:.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* TIRE CARDS */
+.tire-list{display:flex;flex-direction:column;gap:8px}
+.tire-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;cursor:pointer;transition:border-color .15s}
+.tire-card:hover{border-color:var(--accent)}
+.tire-card.res-card{border-left:3px solid var(--accent2)}
+.tc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.tc-brand{font-size:1rem;font-weight:700}
+.tc-type{font-weight:400;color:var(--text2)}
+.tc-maat{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--accent);font-weight:600}
+.tc-lsi{color:var(--text2);font-size:.75rem}
+.tc-loc{font-family:'JetBrains Mono',monospace;font-size:.72rem;background:var(--surface3);padding:3px 8px;border-radius:20px;color:var(--text2)}
+.tc-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.badge{font-size:.66rem;padding:2px 8px;border-radius:10px;font-weight:700;font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+.b-zomer{background:rgba(245,158,11,.2);color:var(--accent)}
+.b-winter{background:rgba(59,130,246,.2);color:var(--accent2)}
+.b-all{background:rgba(16,185,129,.2);color:var(--accent3)}
+.b-vrij{background:rgba(16,185,129,.15);color:var(--accent3)}
+.b-res{background:rgba(59,130,246,.15);color:var(--accent2)}
+.b-dot{background:var(--surface3);color:var(--text2)}
+.tc-prices{display:flex;gap:10px;margin-top:5px;font-size:.78rem}
+.p-ink{color:var(--text3)}
+.p-vk{color:var(--accent3);font-weight:700}
+.p-mg{color:var(--accent)}
+.tc-date{font-size:.72rem;color:var(--text3);margin-top:4px}
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:3rem;opacity:.3;margin-bottom:10px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;overflow-y:auto;padding:20px 16px}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:480px;padding:20px;position:relative}
+.modal-close{position:absolute;top:12px;right:12px;background:var(--surface3);border:none;color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem}
+.modal-title{font-size:1.2rem;font-weight:700;margin-bottom:2px}
+.modal-sub{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--accent);margin-bottom:14px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.di{background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px}
+.di-lbl{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace}
+.di-val{font-size:.88rem;font-weight:600;margin-top:2px}
+
+/* MAP */
+.stelling-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px}
+.stelling-hdr{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--accent);font-weight:700;margin-bottom:8px;text-transform:uppercase}
+.map-row{display:flex;gap:5px;align-items:center;margin-bottom:4px}
+.map-lbl{font-size:.62rem;color:var(--text3);font-family:'JetBrains Mono',monospace;width:22px;flex-shrink:0}
+.map-cell{width:32px;height:27px;border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-family:'JetBrains Mono',monospace;cursor:default;transition:all .15s;background:var(--surface3);color:var(--text3)}
+.map-cell.free{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:var(--accent3)}
+.map-cell.occ{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:var(--danger);cursor:pointer}
+.map-cell.res{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:var(--accent2);cursor:pointer}
+
+/* SETTINGS */
+.info-box{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius-sm);padding:12px;font-size:.82rem;color:var(--text2);line-height:1.6}
+.info-box strong{color:var(--accent)}
+.api-wrap{position:relative}
+.api-wrap input{width:100%;padding-right:40px}
+.api-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:.9rem;padding:4px}
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* NOTIFICATION */
+.notif{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--border);border-radius:20px;padding:10px 20px;font-size:.84rem;font-weight:600;z-index:999;transition:transform .3s;white-space:nowrap}
+.notif.show{transform:translateX(-50%) translateY(0)}
+.notif.success{border-color:var(--accent3);color:var(--accent3)}
+.notif.error{border-color:var(--danger);color:var(--danger)}
+.notif.info{border-color:var(--accent);color:var(--accent)}
+
+.mt8{margin-top:8px}.mt12{margin-top:12px}
+hr.div{border:none;border-top:1px solid var(--border);margin:14px 0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Band<span>Tracker</span> <span style="color:var(--accent)">Pro</span></div>
+  <div class="header-badge" id="countBadge">0 banden</div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <button class="tab active" onclick="goTab('inboeken')">📷 Scan</button>
+  <button class="tab" onclick="goTab('voorraad')">📦 Voorraad</button>
+  <button class="tab" onclick="goTab('zoeken')">🔍 Zoeken</button>
+  <button class="tab" onclick="goTab('kaart')">🗺️ Kaart</button>
+  <button class="tab" onclick="goTab('export')">💾 Export</button>
+  <button class="tab" onclick="goTab('instellingen')">⚙️ Instellingen</button>
+</div>
+
+<div class="content">
+
+<!-- INBOEKEN -->
+<div class="section active" id="sec-inboeken">
+  <div class="card">
+    <div class="card-title">Foto's toevoegen</div>
+    <div class="photo-slots">
+      <div class="photo-slot" id="ps1">
+        <div class="photo-slot-icon">🔵</div>
+        <div class="photo-slot-label">Zijwand<br><small style="color:var(--text3);font-size:.6rem">maat · DOT · type</small></div>
+        <img class="photo-slot-preview" id="pv1">
+        <div class="photo-slot-btns">
+          <div class="psbtn">📷 Camera<input type="file" id="fi1c" accept="image/*" capture="environment"></div>
+          <div class="psbtn">🖼️ Foto<input type="file" id="fi1l" accept="image/*"></div>
+        </div>
+      </div>
+      <div class="photo-slot" id="ps2">
+        <div class="photo-slot-icon">🟡</div>
+        <div class="photo-slot-label">Label / Sticker<br><small style="color:var(--text3);font-size:.6rem">EAN · artikelnr</small></div>
+        <img class="photo-slot-preview" id="pv2">
+        <div class="photo-slot-btns">
+          <div class="psbtn">📷 Camera<input type="file" id="fi2c" accept="image/*" capture="environment"></div>
+          <div class="psbtn">🖼️ Foto<input type="file" id="fi2l" accept="image/*"></div>
+        </div>
+      </div>
+    </div>
+    <div class="photo-count">📸 <b id="pc1">0</b> / 2 foto's — minimaal 1 vereist</div>
+    <div class="scan-bar" id="sb1"></div>
+    <div class="scan-status" id="ss1"></div>
+    <div class="ean-bar" id="eanBar">
+      <div class="ean-bar-val" id="eanVal">—</div>
+      <button class="ean-bar-btn" onclick="openEan()">🔗 EAN-Search.org</button>
+    </div>
+    <button class="btn btn-primary mt8" id="scanBtn" disabled onclick="doScan()">⚡ Analyseer met AI</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bandgegevens</div>
+    <div class="form-grid">
+      <div class="field full"><label>Merk</label><input id="f_merk" placeholder="bijv. Michelin"></div>
+      <div class="field full"><label>Type / Model</label><input id="f_type" placeholder="bijv. Pilot Sport 4"></div>
+      <div class="field"><label>Breedte</label><input id="f_breedte" placeholder="205"></div>
+      <div class="field"><label>Hoogte (%)</label><input id="f_hoogte" placeholder="45"></div>
+      <div class="field"><label>Inch (R__)</label><input id="f_inch" placeholder="17"></div>
+      <div class="field"><label>Load/Speed Index</label><input id="f_lsi" placeholder="88V"></div>
+      <div class="field"><label>DOT-code</label><input id="f_dot" placeholder="DOT 2423"></div>
+      <div class="field"><label>Seizoen</label>
+        <select id="f_seizoen">
+          <option value="">-- Kies --</option>
+          <option>Zomer</option><option>Winter</option><option>All-season</option>
+        </select>
+      </div>
+      <div class="field"><label>Artikelnummer</label><input id="f_artnr" placeholder="R5185"></div>
+      <div class="field"><label>EAN</label><input id="f_ean" placeholder="6938112622633"></div>
+      <div class="field"><label>Inkoopprijs (€)</label><input id="f_inkoop" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="field"><label>Verkoopprijs (€)</label><input id="f_verkoop" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="field full"><label>Klant (reservering)</label><input id="f_klant" placeholder="Naam klant (optioneel)"></div>
+      <div class="field full"><label>Notitie</label><textarea id="f_notitie" placeholder="Optionele notitie..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="loc-header">
+      <div class="card-title" style="margin-bottom:0">Locatie kiezen</div>
+      <button class="loc-info-btn" onclick="document.getElementById('locInfoBox').classList.toggle('show')" title="Uitleg garage indeling">ℹ️</button>
+    </div>
+    <div class="loc-info-box" id="locInfoBox">
+      <strong>Garage indeling — aanbeveling:</strong><br><br>
+      ☀️ <strong>Stelling A</strong> — Zomerbanden<br>
+      ❄️ <strong>Stelling B</strong> — Winterbanden<br>
+      🔄 <strong>Stelling C</strong> — All-season<br>
+      👤 <strong>Stelling D</strong> — Gereserveerd / Klanten<br>
+      📦 <strong>Stelling E</strong> — Overloop / Divers<br><br>
+      <strong>Per laag:</strong><br>
+      L1 — Gangbare maten (bijv. 205/55R16)<br>
+      L2 — Grotere maten / SUV (bijv. 235/55R18+)<br>
+      L3 — Kleinere maten (bijv. 175/65R14)<br>
+      L4 — Speciaal / run-flat / UHP (alleen B, C, D)<br><br>
+      💡 Je kunt elke locatie vrij kiezen — dit zijn suggesties.
+    </div>
+
+    <!-- AANTAL BANDEN SELECTOR -->
+    <div class="qty-bar">
+      <div class="qty-label">Aantal banden:</div>
+      <div class="qty-btns">
+        <button class="qty-btn active" onclick="setAantal(1,this)">1</button>
+        <button class="qty-btn" onclick="setAantal(2,this)">2</button>
+        <button class="qty-btn" onclick="setAantal(4,this)">4</button>
+        <button class="qty-btn" onclick="setAantal('anders',this)">✏️</button>
+      </div>
+      <input type="number" id="aantalCustom" class="qty-custom" min="1" max="20" value="1" style="display:none" oninput="setAantalCustom(this.value)">
+    </div>
+    <div class="qty-info" id="qtyInfo">Selecteer 1 locatie</div>
+
+    <div id="locPicker"></div>
+    <div class="loc-legend">
+      <span><i style="background:var(--accent)"></i>Geselecteerd</span>
+      <span><i style="background:rgba(239,68,68,.5)"></i>Bezet</span>
+      <span><i style="background:rgba(59,130,246,.5)"></i>Gereserveerd</span>
+    </div>
+    <div class="mt8" style="font-size:.82rem;color:var(--text2);font-family:'JetBrains Mono',monospace" id="locSelected">Geen locatie geselecteerd</div>
+  </div>
+
+  <button class="btn btn-success" style="font-size:1.1rem;padding:16px" onclick="saveTire()">✅ Band Opslaan</button>
+  <button class="btn btn-secondary mt8" onclick="resetForm()">🔄 Formulier wissen</button>
+</div>
+
+<!-- VOORRAAD -->
+<div class="section" id="sec-voorraad">
+  <div class="stats-grid" id="statsGrid"></div>
+  <div class="search-bar"><input id="searchQ" placeholder="Zoek merk, maat, DOT, klant..." oninput="renderList()"></div>
+  <div class="filters" id="filterRow"></div>
+  <div class="tire-list" id="tireList"></div>
+</div>
+
+<!-- ZOEKEN -->
+<div class="section" id="sec-zoeken">
+  <div class="card">
+    <div class="card-title">Band Scannen om te Zoeken</div>
+    <div class="photo-slots">
+      <div class="photo-slot" id="ps3">
+        <div class="photo-slot-icon">🔵</div>
+        <div class="photo-slot-label">Zijwand</div>
+        <img class="photo-slot-preview" id="pv3">
+        <div class="photo-slot-btns">
+          <div class="psbtn">📷 Camera<input type="file" id="fi3c" accept="image/*" capture="environment"></div>
+          <div class="psbtn">🖼️ Foto<input type="file" id="fi3l" accept="image/*"></div>
+        </div>
+      </div>
+      <div class="photo-slot" id="ps4">
+        <div class="photo-slot-icon">🟡</div>
+        <div class="photo-slot-label">Label / EAN</div>
+        <img class="photo-slot-preview" id="pv4">
+        <div class="photo-slot-btns">
+          <div class="psbtn">📷 Camera<input type="file" id="fi4c" accept="image/*" capture="environment"></div>
+          <div class="psbtn">🖼️ Foto<input type="file" id="fi4l" accept="image/*"></div>
+        </div>
+      </div>
+    </div>
+    <div class="photo-count">📸 <b id="pc2">0</b> / 2 foto's</div>
+    <div class="scan-bar" id="sb2"></div>
+    <div class="scan-status" id="ss2"></div>
+    <button class="btn btn-blue mt8" id="zoekBtn" disabled onclick="doSearch()">🔍 Zoek Band</button>
+  </div>
+  <div id="searchResults"></div>
+</div>
+
+<!-- KAART -->
+<div class="section" id="sec-kaart">
+  <div class="card">
+    <div class="card-title">Garage Overzicht</div>
+    <div id="garageMap"></div>
+    <div class="loc-legend mt8">
+      <span><i style="background:rgba(16,185,129,.5)"></i>Vrij</span>
+      <span><i style="background:rgba(239,68,68,.5)"></i>Bezet</span>
+      <span><i style="background:rgba(59,130,246,.5)"></i>Gereserveerd</span>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT -->
+<div class="section" id="sec-export">
+  <div class="card">
+    <div class="card-title">Exporteren</div>
+    <div class="export-grid">
+      <button class="btn btn-success" onclick="exportCSV()">📊 CSV (Excel)</button>
+      <button class="btn btn-blue" onclick="exportJSON()">💾 JSON Backup</button>
+    </div>
+    <div class="info-box mt8"><strong>CSV:</strong> Puntkomma-gescheiden, UTF-8 BOM, Excel-klaar. Bevat marge-berekening.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Importeren</div>
+    <div class="field">
+      <label>JSON Backup bestand</label>
+      <input type="file" id="importFile" accept=".json" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:9px 12px;font-size:.85rem">
+    </div>
+    <button class="btn btn-secondary mt8" onclick="importJSON()">📂 Importeer JSON</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Data Beheer</div>
+    <button class="btn btn-danger" onclick="clearAll()">🗑️ Alle data wissen</button>
+  </div>
+</div>
+
+<!-- INSTELLINGEN -->
+<div class="section" id="sec-instellingen">
+  <div class="card">
+    <div class="card-title">Anthropic API Key</div>
+    <div class="field">
+      <label>API Key</label>
+      <div class="api-wrap">
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+        <button class="api-toggle" onclick="document.getElementById('apiKeyInput').type=document.getElementById('apiKeyInput').type==='password'?'text':'password'">👁️</button>
+      </div>
+    </div>
+    <button class="btn btn-primary mt8" onclick="saveApiKey()">💾 API Key Opslaan</button>
+    <div class="info-box mt8">
+      <strong>Let op:</strong> API key wordt lokaal opgeslagen in deze browser.<br>
+      Model: <strong>claude-sonnet-4-6</strong>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Garage Configuratie</div>
+    <div class="info-box">
+      <strong>Stellingen:</strong> A t/m E &nbsp;|&nbsp; <strong>Lagen:</strong> L1–L4 (A+E: max L3) &nbsp;|&nbsp; <strong>Vakken:</strong> V1–V5<br>
+      Capaciteit: <strong id="totalCap">—</strong> vakken
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Over</div>
+    <div class="info-box">
+      <strong>BandTracker Pro</strong> — Standalone HTML, geen server vereist.<br>
+      Data opgeslagen in localStorage van dit apparaat.<br>
+      Werkt op iPhone Safari, Android Chrome en desktop.
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="m-titel">—</div>
+    <div class="modal-sub" id="m-maat">—</div>
+    <div class="detail-grid" id="m-details"></div>
+    <div class="btn-row" id="m-actions"></div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ══ GLOBAL TAB SWITCH — foolproof, geen dataset, geen closest ══
+function goTab(name) {
+  var allTabs = document.getElementById('tabBar').getElementsByTagName('button');
+  var allSecs = document.getElementsByClassName('section');
+  for (var i = 0; i < allTabs.length; i++) allTabs[i].classList.remove('active');
+  for (var i = 0; i < allSecs.length; i++) allSecs[i].classList.remove('active');
+  // Activeer juiste tab knop
+  var tabNames = ['inboeken','voorraad','zoeken','kaart','export','instellingen'];
+  var idx = tabNames.indexOf(name);
+  if (idx >= 0) allTabs[idx].classList.add('active');
+  // Activeer juiste sectie
+  var sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  if (name === 'voorraad') renderList();
+  if (name === 'kaart') renderMap();
+  if (name === 'instellingen') initSettings();
+}
+function switchTab(btn) { goTab(btn && (btn.dataset.tab || btn.getAttribute('data-tab'))); }
+
+// ══ CONFIG ══
+var STELLINGEN = ['A','B','C','D','E'];
+var NO_L4 = ['A','E'];
+var LAGEN = [1,2,3,4];
+var VAKKEN = ['V1','V2','V3','V4','V5'];
+var DB = 'bt_data_v3';
+
+// ══ GARAGE AANBEVELINGEN ══
+var STELLING_INFO = {
+  A: { label: 'Zomerbanden', icon: '☀️', color: '#f59e0b' },
+  B: { label: 'Winterbanden', icon: '❄️', color: '#3b82f6' },
+  C: { label: 'All-season', icon: '🔄', color: '#10b981' },
+  D: { label: 'Gereserveerd / Klanten', icon: '👤', color: '#8b5cf6' },
+  E: { label: 'Overloop / Divers', icon: '📦', color: '#6b7280' }
+};
+var LAAG_INFO = {
+  1: { label: 'Gangbare maten (populair)', sub: 'bijv. 205/55R16' },
+  2: { label: 'Grotere maten / SUV', sub: 'bijv. 235/55R18+' },
+  3: { label: 'Kleinere maten', sub: 'bijv. 175/65R14' },
+  4: { label: 'Speciale / run-flat', sub: 'bijv. XL, RF, UHP' }
+};
+
+// ══ STATE ══
+let tires = [];
+let selLocs = []; // array van geselecteerde locaties (multi)
+let selLoc = null; // backwards compat alias
+let editId = null;
+let curFilter = 'all';
+let curEan = '';
+let aantalBanden = 1;
+let photos1 = [null, null];
+let photos2 = [null, null];
+
+// ══ INIT ══
+(function init() {
+  try { tires = JSON.parse(localStorage.getItem(DB)) || []; } catch { tires = []; }
+  // Tabs: goTab() via inline onclick - geen event listener nodig
+  // Foto inputs inboeken — camera + bibliotheek per slot
+  [['fi1c','fi1l'],['fi2c','fi2l']].forEach(([camId,libId], i) => {
+    const handler = e => onPhoto(e, i, photos1, 'pc1', 'ps'+(i+1), 'pv'+(i+1), 'scanBtn');
+    document.getElementById(camId).addEventListener('change', handler);
+    document.getElementById(libId).addEventListener('change', handler);
+  });
+  // Foto inputs zoeken — camera + bibliotheek per slot
+  [['fi3c','fi3l'],['fi4c','fi4l']].forEach(([camId,libId], i) => {
+    const handler = e => onPhoto(e, i, photos2, 'pc2', 'ps'+(i+3), 'pv'+(i+3), 'zoekBtn');
+    document.getElementById(camId).addEventListener('change', handler);
+    document.getElementById(libId).addEventListener('change', handler);
+  });
+  // Filters
+  const filters = [
+    {k:'all',l:'Alle'},{k:'Zomer',l:'Zomer'},{k:'Winter',l:'Winter'},
+    {k:'All-season',l:'All-season'},{k:'vrij',l:'Vrij'},{k:'gereserveerd',l:'Gereserveerd'}
+  ];
+  document.getElementById('filterRow').innerHTML = filters.map(f =>
+    `<button class="fbtn${f.k==='all'?' active':''}" onclick="setFilter('${f.k}',this)">${f.l}</button>`
+  ).join('');
+  buildLocPicker();
+  updateBadge();
+})();
+
+function triggerFile(id) {
+  document.getElementById(id).click();
+}
+
+function onPhoto(e, idx, arr, countId, slotId, prevId, btnId) {
+  const file = e.target.files[0];
+  if (!file) return;
+  arr[idx] = file;
+  const pv = document.getElementById(prevId);
+  pv.src = URL.createObjectURL(file);
+  pv.style.display = 'block';
+  const slot = document.getElementById(slotId);
+  slot.classList.add('has-photo');
+  slot.querySelector('.photo-slot-icon').style.display = 'none';
+  slot.querySelector('.photo-slot-label').textContent = '✅ Geladen';
+  document.getElementById(countId).textContent = arr.filter(Boolean).length;
+  document.getElementById(btnId).disabled = !arr.some(Boolean);
+}
+
+// ══ API ══
+function getKey() { return localStorage.getItem('bt_key') || ''; }
+function saveApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k) { notify('Voer een API key in', 'error'); return; }
+  localStorage.setItem('bt_key', k);
+  notify('API key opgeslagen ✓', 'success');
+}
+function initSettings() {
+  const k = getKey();
+  if (k) document.getElementById('apiKeyInput').value = k;
+  let cap = 0;
+  STELLINGEN.forEach(s => { cap += (NO_L4.includes(s) ? 3 : 4) * VAKKEN.length; });
+  document.getElementById('totalCap').textContent = cap;
+}
+
+// ══ SCAN ══
+async function doScan() { await runAI(photos1, 'sb1', 'ss1', 'scanBtn', 'inboeken'); }
+async function doSearch() { await runAI(photos2, 'sb2', 'ss2', 'zoekBtn', 'zoeken'); }
+
+async function runAI(files, barId, statusId, btnId, mode) {
+  const key = getKey();
+  if (!key) { notify('API key instellen via ⚙️ Instellingen', 'error'); return; }
+  const bar = document.getElementById(barId);
+  const st = document.getElementById(statusId);
+  const btn = document.getElementById(btnId);
+  bar.classList.add('active');
+  btn.disabled = true;
+  try {
+    const content = [];
+    const lbls = ['zijwand (sidewall)', 'label/sticker'];
+    for (let i = 0; i < 2; i++) {
+      if (!files[i]) continue;
+      st.textContent = `📸 Foto ${i+1} verwerken...`;
+      const b64 = await toB64(files[i]);
+      content.push({ type:'image', source:{ type:'base64', media_type: files[i].type||'image/jpeg', data:b64 }});
+      content.push({ type:'text', text:`Bovenstaande foto is: ${lbls[i]}` });
+    }
+    content.push({ type:'text', text:`Je bent een expert bandherkenning systeem. Analyseer alle meegestuurde bandafbeeldingen en combineer alle zichtbare informatie.
+Van ZIJWAND: merk, type/model, maat (breedte/hoogte/inch), load/speed index, DOT-code, seizoensymbolen, Extra Load/M+S.
+Van LABEL/STICKER: EAN-barcode (alleen cijfers), artikelnummer, merk, type, maat.
+Geef ALLEEN dit JSON object terug, geen uitleg, geen markdown:
+{"merk":"","type":"","breedte":"","hoogte":"","inch":"","lsi":"","dot":"","seizoen":"Zomer of Winter of All-season of leeg","artnr":"","ean":"","notitie":""}` });
+    st.textContent = '🤖 Claude Vision analyseert...';
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:800, messages:[{ role:'user', content }] })
+    });
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || resp.statusText); }
+    const data = await resp.json();
+    const txt = data.content?.[0]?.text || '';
+    st.textContent = '✅ Analyse klaar!';
+    let parsed = {};
+    try { parsed = JSON.parse(txt.replace(/```json|```/g,'').trim()); }
+    catch { const m = txt.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); }
+    if (mode === 'inboeken') {
+      fillForm(parsed);
+      if (parsed.ean) showEanBar(parsed.ean);
+      notify('Band herkend ✓', 'success');
+    } else {
+      showSearchResults(parsed);
+    }
+  } catch(err) {
+    st.textContent = '❌ ' + err.message;
+    notify('Fout: ' + err.message, 'error');
+  } finally {
+    bar.classList.remove('active');
+    btn.disabled = !files.some(Boolean);
+  }
+}
+
+function toB64(file) {
+  return new Promise((res,rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+}
+
+// ══ EAN ══
+function showEanBar(ean) {
+  curEan = ean.replace(/\s/g,'');
+  document.getElementById('eanVal').textContent = 'EAN: ' + curEan;
+  document.getElementById('eanBar').classList.add('show');
+}
+function openEan(ean) {
+  const code = ean || curEan;
+  if (!code) { notify('Geen EAN beschikbaar','error'); return; }
+  window.open('https://www.ean-search.org/perl/ean-search.pl?q=' + code, '_blank');
+}
+
+// ══ FORM ══
+function fillForm(d) {
+  const map = { f_merk:d.merk,f_type:d.type,f_breedte:d.breedte,f_hoogte:d.hoogte,f_inch:d.inch,f_lsi:d.lsi,f_dot:d.dot,f_artnr:d.artnr,f_ean:d.ean,f_notitie:d.notitie };
+  Object.entries(map).forEach(([id,val]) => { if (val) { const el = document.getElementById(id); el.value = val; el.classList.add('ai-ok'); } });
+  if (d.seizoen) { const s = document.getElementById('f_seizoen'); [...s.options].forEach(o => { if (o.value === d.seizoen) s.value = d.seizoen; }); }
+}
+
+function resetForm() {
+  ['f_merk','f_type','f_breedte','f_hoogte','f_inch','f_lsi','f_dot','f_artnr','f_ean','f_inkoop','f_verkoop','f_klant','f_notitie'].forEach(function(id) {
+    var el = document.getElementById(id); el.value = ''; el.classList.remove('ai-ok');
+  });
+  document.getElementById('f_seizoen').value = '';
+  selLoc = null; selLocs = []; editId = null; aantalBanden = 1;
+  // Reset aantal knoppen
+  document.querySelectorAll('.qty-btn').forEach(function(b,i) { b.classList.toggle('active', i===0); });
+  var custom = document.getElementById('aantalCustom');
+  if (custom) { custom.style.display = 'none'; custom.value = 1; }
+  updateLocStatus();
+  photos1 = [null,null];
+  ['fi1c','fi1l','fi2c','fi2l'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['pv1','pv2'].forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+  ['ps1','ps2'].forEach(function(id,i) {
+    var s = document.getElementById(id); s.classList.remove('has-photo');
+    s.querySelector('.photo-slot-icon').style.display = '';
+    s.querySelector('.photo-slot-label').innerHTML = i===0 ? 'Zijwand<br><small style="color:var(--text3);font-size:.6rem">maat · DOT · type</small>' : 'Label / Sticker<br><small style="color:var(--text3);font-size:.6rem">EAN · artikelnr</small>';
+  });
+  document.getElementById('pc1').textContent = '0';
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('ss1').textContent = '';
+  document.getElementById('eanBar').classList.remove('show');
+  curEan = '';
+  buildLocPicker();
+}
+
+// ══ LOCATIE ══
+
+// ══ AANTAL BANDEN ══
+function setAantal(n, btn) {
+  var custom = document.getElementById('aantalCustom');
+  if (n === 'anders') {
+    custom.style.display = 'block';
+    aantalBanden = parseInt(custom.value) || 1;
+  } else {
+    custom.style.display = 'none';
+    aantalBanden = n;
+  }
+  document.querySelectorAll('.qty-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  selLocs = [];
+  updateLocStatus();
+  buildLocPicker();
+}
+
+function setAantalCustom(v) {
+  aantalBanden = Math.max(1, Math.min(20, parseInt(v) || 1));
+  selLocs = [];
+  updateLocStatus();
+  buildLocPicker();
+}
+
+function updateLocStatus() {
+  var info = document.getElementById('qtyInfo');
+  var sel = document.getElementById('locSelected');
+  if (!info || !sel) return;
+  var n = aantalBanden;
+  var k = selLocs.length;
+  if (k === 0) {
+    info.textContent = 'Selecteer ' + n + ' locatie' + (n > 1 ? 's' : '');
+    sel.textContent = 'Geen locatie geselecteerd';
+  } else if (k < n) {
+    info.textContent = k + ' van ' + n + ' geselecteerd — nog ' + (n - k) + ' te gaan';
+    sel.textContent = '📍 ' + selLocs.join(' · ');
+  } else {
+    info.textContent = '✅ ' + k + ' locatie' + (k > 1 ? 's' : '') + ' geselecteerd';
+    sel.textContent = '📍 ' + selLocs.join(' · ');
+  }
+}
+
+// ══ LOCATIE ══
+function buildLocPicker() {
+  var c = document.getElementById('locPicker');
+  c.innerHTML = '';
+  STELLINGEN.forEach(function(s) {
+    var maxL = NO_L4.includes(s) ? 3 : 4;
+    var sInfo = STELLING_INFO[s];
+    var sDiv = document.createElement('div');
+    sDiv.className = 'loc-stelling';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'loc-stelling-hdr';
+    hdr.innerHTML = '<span>Stelling ' + s + '</span><span class="loc-stelling-tip" style="color:' + sInfo.color + '">' + sInfo.icon + ' ' + sInfo.label + '</span>';
+    sDiv.appendChild(hdr);
+
+    for (var l = 1; l <= maxL; l++) {
+      var lInfo = LAAG_INFO[l];
+      var laagRow = document.createElement('div');
+      laagRow.className = 'loc-laag';
+
+      var laagLbl = document.createElement('div');
+      laagLbl.className = 'loc-laag-lbl';
+      laagLbl.title = lInfo.label + ' — ' + lInfo.sub;
+      laagLbl.textContent = 'L' + l;
+      laagRow.appendChild(laagLbl);
+
+      var vakkenDiv = document.createElement('div');
+      vakkenDiv.className = 'loc-vakken';
+
+      VAKKEN.forEach(function(v) {
+        var code = s + '-L' + l + '-' + v;
+        var occ = tires.find(function(t) { return t.locatie === code && t.id !== editId; });
+        var cell = document.createElement('button');
+        cell.className = 'loc-cell';
+        cell.type = 'button';
+
+        if (occ) {
+          cell.textContent = v;
+          cell.classList.add(occ.klant ? 'res' : 'occ');
+          cell.title = occ.klant ? 'Gereserveerd: ' + occ.klant : 'Bezet: ' + (occ.merk||'?') + ' ' + (occ.maat||'');
+          cell.disabled = true;
+        } else {
+          var idx = selLocs.indexOf(code);
+          if (idx >= 0) {
+            cell.textContent = idx + 1; // toon volgorde
+            cell.classList.add('sel');
+          } else {
+            cell.textContent = v;
+          }
+          cell.title = code + ' — ' + sInfo.icon + ' ' + lInfo.sub;
+          cell.onclick = (function(c2) {
+            return function() {
+              var i = selLocs.indexOf(c2);
+              if (i >= 0) {
+                selLocs.splice(i, 1);
+              } else {
+                if (selLocs.length >= aantalBanden) selLocs.shift();
+                selLocs.push(c2);
+              }
+              selLoc = selLocs[selLocs.length - 1] || null;
+              updateLocStatus();
+              buildLocPicker();
+            };
+          })(code);
+        }
+        vakkenDiv.appendChild(cell);
+      });
+      laagRow.appendChild(vakkenDiv);
+
+      var hint = document.createElement('div');
+      hint.className = 'loc-laag-hint';
+      hint.textContent = lInfo.label;
+      laagRow.appendChild(hint);
+
+      sDiv.appendChild(laagRow);
+    }
+    c.appendChild(sDiv);
+  });
+}
+
+// ══ OPSLAAN ══
+function saveTire() {
+  var merk = document.getElementById('f_merk').value.trim();
+  var breedte = document.getElementById('f_breedte').value.trim();
+  if (!merk && !breedte) { notify('Vul minimaal merk of maat in','error'); return; }
+
+  // Bij bewerken: 1 locatie verplicht via selLoc
+  if (editId) {
+    var editLoc = selLocs[0] || selLoc || (tires.find(function(t){return t.id===editId;})||{}).locatie;
+    if (!editLoc) { notify('Kies een locatie','error'); return; }
+  } else {
+    if (selLocs.length === 0) { notify('Kies minimaal 1 locatie','error'); return; }
+    if (selLocs.length < aantalBanden) {
+      if (!confirm('Je hebt ' + selLocs.length + ' van ' + aantalBanden + ' locaties geselecteerd. Toch opslaan?')) return;
+    }
+  }
+
+  var hoogte = document.getElementById('f_hoogte').value.trim();
+  var inch = document.getElementById('f_inch').value.trim();
+  var maat = (breedte && hoogte && inch) ? breedte+'/'+hoogte+' R'+inch : [breedte,hoogte,inch].filter(Boolean).join('/');
+  var inkoop = parseFloat(document.getElementById('f_inkoop').value) || 0;
+  var verkoop = parseFloat(document.getElementById('f_verkoop').value) || 0;
+
+  var baseData = {
+    merk: merk,
+    type: document.getElementById('f_type').value.trim(),
+    breedte: breedte, hoogte: hoogte, inch: inch, maat: maat,
+    lsi: document.getElementById('f_lsi').value.trim(),
+    dot: document.getElementById('f_dot').value.trim(),
+    seizoen: document.getElementById('f_seizoen').value,
+    artnr: document.getElementById('f_artnr').value.trim(),
+    ean: document.getElementById('f_ean').value.trim(),
+    inkoop: inkoop, verkoop: verkoop, marge: verkoop - inkoop,
+    klant: document.getElementById('f_klant').value.trim(),
+    notitie: document.getElementById('f_notitie').value.trim(),
+    datum: new Date().toLocaleDateString('nl-NL')
+  };
+
+  if (editId) {
+    var tire = Object.assign({}, baseData, { id: editId, locatie: selLocs[0] || selLoc || '' });
+    var i = tires.findIndex(function(t){return t.id===editId;});
+    if (i >= 0) tires[i] = tire;
+    notify('Band bijgewerkt ✓', 'success');
+  } else {
+    var locs = selLocs.length > 0 ? selLocs : [selLoc];
+    locs.forEach(function(loc) {
+      tires.push(Object.assign({}, baseData, { id: uid(), locatie: loc }));
+    });
+    notify(locs.length + ' band' + (locs.length > 1 ? 'en' : '') + ' opgeslagen ✓', 'success');
+  }
+
+  saveDB(); resetForm();
+  editId = null;
+}
+
+// ══ INVENTORY ══
+function setFilter(key, el) {
+  curFilter = key;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  renderStats();
+  const q = document.getElementById('searchQ').value.toLowerCase();
+  let list = tires.filter(t => [t.merk,t.type,t.maat,t.dot,t.ean,t.klant,t.locatie,t.seizoen].join(' ').toLowerCase().includes(q));
+  if (curFilter === 'vrij') list = list.filter(t => !t.klant);
+  else if (curFilter === 'gereserveerd') list = list.filter(t => t.klant);
+  else if (curFilter !== 'all') list = list.filter(t => t.seizoen === curFilter);
+  const c = document.getElementById('tireList');
+  if (!list.length) { c.innerHTML = `<div class="empty"><div class="empty-icon">🚗</div>Geen banden gevonden</div>`; return; }
+  c.innerHTML = list.map(tireHTML).join('');
+  list.forEach(t => { const el = c.querySelector(`[data-id="${t.id}"]`); if(el) el.onclick = () => openModal(t.id); });
+}
+
+function renderStats() {
+  const t = tires.length, v = tires.filter(x=>!x.klant).length, r = tires.filter(x=>x.klant).length;
+  const m = tires.reduce((s,x) => s+(x.marge||0), 0);
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${t}</div><div class="stat-lbl">Totaal banden</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--accent3)">${v}</div><div class="stat-lbl">Vrij</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--accent2)">${r}</div><div class="stat-lbl">Gereserveerd</div></div>
+    <div class="stat-card"><div class="stat-val">€${m.toFixed(0)}</div><div class="stat-lbl">Totale marge</div></div>`;
+}
+
+function seizBadge(s) {
+  if (!s) return '';
+  const cls = s==='Zomer'?'b-zomer':s==='Winter'?'b-winter':'b-all';
+  return `<span class="badge ${cls}">${s}</span>`;
+}
+
+function tireHTML(t) {
+  return `<div class="tire-card${t.klant?' res-card':''}" data-id="${t.id}">
+    <div class="tc-head">
+      <div>
+        <div class="tc-brand">${t.merk||'—'} <span class="tc-type">${t.type||''}</span></div>
+        <div class="tc-maat">${t.maat||'—'} <span class="tc-lsi">${t.lsi||''}</span></div>
+      </div>
+      <div class="tc-loc">${t.locatie||'—'}</div>
+    </div>
+    <div class="tc-meta">
+      ${seizBadge(t.seizoen)}
+      <span class="badge ${t.klant?'b-res':'b-vrij'}">${t.klant?'Res: '+t.klant:'Vrij'}</span>
+      ${t.dot?`<span class="badge b-dot">DOT: ${t.dot}</span>`:''}
+    </div>
+    ${t.verkoop?`<div class="tc-prices">
+      ${t.inkoop?`<span class="p-ink">Ink: €${t.inkoop.toFixed(2)}</span>`:''}
+      <span class="p-vk">Vk: €${t.verkoop.toFixed(2)}</span>
+      ${(t.inkoop&&t.verkoop)?`<span class="p-mg">Marge: €${(t.verkoop-t.inkoop).toFixed(2)}</span>`:''}
+    </div>`:''}
+    ${t.datum?`<div class="tc-date">📅 ${t.datum}</div>`:''}
+  </div>`;
+}
+
+// ══ ZOEKEN ══
+function showSearchResults(d) {
+  const maat = `${d.breedte||'?'}/${d.hoogte||'?'} R${d.inch||'?'}`;
+  let hits = tires.filter(t => {
+    if (d.ean && t.ean === d.ean) return true;
+    if (d.dot && t.dot === d.dot) return true;
+    const maatOk = d.breedte && t.breedte === d.breedte;
+    const merkOk = d.merk && t.merk?.toLowerCase().includes(d.merk.toLowerCase());
+    return maatOk && merkOk || maatOk;
+  });
+  const c = document.getElementById('searchResults');
+  if (!hits.length) { c.innerHTML = `<div class="card"><div class="empty"><div class="empty-icon">🔍</div>Niet gevonden: <strong>${maat} ${d.merk||''}</strong></div></div>`; return; }
+  c.innerHTML = `<div style="font-size:.8rem;color:var(--text2);margin:8px 0">${hits.length} resultaat${hits.length>1?'en':''}</div>` + hits.map(tireHTML).join('');
+  hits.forEach(t => { const el = c.querySelector(`[data-id="${t.id}"]`); if(el) el.onclick = () => openModal(t.id); });
+}
+
+// ══ MODAL ══
+function openModal(id) {
+  const t = tires.find(x=>x.id===id); if(!t) return;
+  document.getElementById('m-titel').textContent = `${t.merk||'—'} ${t.type||''}`;
+  document.getElementById('m-maat').textContent = `${t.maat||'—'} ${t.lsi||''}`;
+  const fields = [
+    ['Locatie',t.locatie],['Seizoen',t.seizoen],['DOT',t.dot],['EAN',t.ean],
+    ['Artikelnr',t.artnr],['Status',t.klant?'Gereserveerd':'Vrij'],['Klant',t.klant||'—'],
+    ['Inkoop',t.inkoop?`€${t.inkoop.toFixed(2)}`:'—'],['Verkoop',t.verkoop?`€${t.verkoop.toFixed(2)}`:'—'],
+    ['Marge',(t.inkoop&&t.verkoop)?`€${(t.verkoop-t.inkoop).toFixed(2)}`:'—'],
+    ['Datum',t.datum||'—'],['Notitie',t.notitie||'—']
+  ];
+  document.getElementById('m-details').innerHTML = fields.map(([k,v]) =>
+    `<div class="di"><div class="di-lbl">${k}</div><div class="di-val">${v||'—'}</div></div>`).join('');
+  document.getElementById('m-actions').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="editTire('${id}')">✏️ Bewerken</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteTire('${id}')">🗑️ Verwijderen</button>
+    ${t.ean?`<button class="btn btn-blue btn-sm" onclick="openEan('${t.ean}')">🔗 EAN</button>`:''}`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if(e.target.id==='modal') closeModal(); });
+
+function editTire(id) {
+  closeModal();
+  const t = tires.find(x=>x.id===id); if(!t) return;
+  editId = id;
+  const map = {f_merk:t.merk,f_type:t.type,f_breedte:t.breedte,f_hoogte:t.hoogte,f_inch:t.inch,f_lsi:t.lsi,f_dot:t.dot,f_artnr:t.artnr,f_ean:t.ean,f_inkoop:t.inkoop||'',f_verkoop:t.verkoop||'',f_klant:t.klant,f_notitie:t.notitie};
+  Object.entries(map).forEach(([id,val]) => { if(val!==undefined) document.getElementById(id).value = val||''; });
+  document.getElementById('f_seizoen').value = t.seizoen||'';
+  selLoc = t.locatie;
+  document.getElementById('locSelected').textContent = 'Locatie: ' + t.locatie;
+  buildLocPicker();
+  switchToTab('inboeken');
+  notify('Bewerkmodus: ' + (t.merk||'?') + ' ' + (t.maat||''), 'info');
+}
+
+function deleteTire(id) {
+  if (!confirm('Band verwijderen?')) return;
+  tires = tires.filter(t=>t.id!==id);
+  saveDB(); closeModal(); renderList();
+  notify('Band verwijderd','info');
+}
+
+// ══ MAP ══
+function renderMap() {
+  const c = document.getElementById('garageMap'); c.innerHTML = '';
+  STELLINGEN.forEach(s => {
+    const maxL = NO_L4.includes(s) ? 3 : 4;
+    const sDiv = document.createElement('div'); sDiv.className = 'stelling-row';
+    sDiv.innerHTML = `<div class="stelling-hdr">Stelling ${s}</div>`;
+    for (let l=1; l<=maxL; l++) {
+      const row = document.createElement('div'); row.className = 'map-row';
+      row.innerHTML = `<div class="map-lbl">L${l}</div>`;
+      VAKKEN.forEach(v => {
+        const code = `${s}-L${l}-${v}`;
+        const occ = tires.find(t=>t.locatie===code);
+        const cell = document.createElement('div');
+        cell.className = 'map-cell ' + (occ ? (occ.klant?'res':'occ') : 'free');
+        cell.textContent = v.replace('V','');
+        cell.title = occ ? `${occ.merk||'?'} ${occ.maat||'?'}${occ.klant?' ('+occ.klant+')':''}` : code+' vrij';
+        if (occ) cell.onclick = () => openModal(occ.id);
+        row.appendChild(cell);
+      });
+      sDiv.appendChild(row);
+    }
+    c.appendChild(sDiv);
+  });
+}
+
+// ══ EXPORT/IMPORT ══
+function exportCSV() {
+  if (!tires.length) { notify('Geen data','error'); return; }
+  const BOM = '\uFEFF';
+  const H = ['ID','Merk','Type','Maat','Breedte','Hoogte','Inch','LSI','DOT','Seizoen','Artikelnr','EAN','Locatie','Status','Klant','Inkoop','Verkoop','Marge','Datum','Notitie'];
+  const rows = tires.map(t => [t.id,t.merk,t.type,t.maat,t.breedte,t.hoogte,t.inch,t.lsi,t.dot,t.seizoen,t.artnr,t.ean,t.locatie,t.klant?'Gereserveerd':'Vrij',t.klant,t.inkoop?.toFixed(2)||'',t.verkoop?.toFixed(2)||'',(t.inkoop&&t.verkoop)?(t.verkoop-t.inkoop).toFixed(2):'',t.datum,t.notitie].map(v=>`"${String(v||'').replace(/"/g,'""')}"`));
+  dl(BOM+[H.join(';'),...rows.map(r=>r.join(';'))].join('\n'),'bandtracker.csv','text/csv;charset=utf-8');
+  notify('CSV geëxporteerd ✓','success');
+}
+function exportJSON() {
+  if (!tires.length) { notify('Geen data','error'); return; }
+  dl(JSON.stringify({version:3,exported:new Date().toISOString(),tires},null,2),'bandtracker.json','application/json');
+  notify('JSON geëxporteerd ✓','success');
+}
+function importJSON() {
+  const f = document.getElementById('importFile').files[0]; if(!f) { notify('Selecteer een bestand','error'); return; }
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      const imp = d.tires || d; if (!Array.isArray(imp)) throw new Error('Ongeldig formaat');
+      if (!confirm(`${imp.length} banden importeren?`)) return;
+      const ids = new Set(tires.map(t=>t.id));
+      imp.forEach(t => { if(!ids.has(t.id)) tires.push(t); });
+      saveDB(); renderList(); notify(`${imp.length} banden geïmporteerd ✓`,'success');
+    } catch(err) { notify('Importfout: '+err.message,'error'); }
+  };
+  r.readAsText(f);
+}
+function clearAll() {
+  if (!confirm('ALLE data wissen?')) return;
+  if (!confirm('Zeker weten?')) return;
+  tires = []; saveDB(); renderList(); buildLocPicker(); notify('Data gewist','info');
+}
+function dl(content, filename, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = filename; a.click();
+}
+
+// ══ HELPERS ══
+function saveDB() { localStorage.setItem(DB, JSON.stringify(tires)); updateBadge(); }
+function updateBadge() { document.getElementById('countBadge').textContent = tires.length+' band'+(tires.length!==1?'en':''); }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function switchToTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`button[data-tab="${name}"]`).classList.add('active');
+  document.getElementById('sec-'+name).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+let notifTimer;
+function notify(msg, type='info') {
+  const el = document.getElementById('notif');
+  el.textContent = msg; el.className = 'notif '+type+' show';
+  clearTimeout(notifTimer); notifTimer = setTimeout(()=>el.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
